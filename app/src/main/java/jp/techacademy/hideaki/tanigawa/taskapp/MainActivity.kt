@@ -148,8 +148,6 @@ class MainActivity : AppCompatActivity() {
 
         // Realmからタスクの一覧を取得
         val tasks = realm.query<Task>().sort("date", Sort.DESCENDING).find()
-        System.out.println(tasks::class.simpleName)
-        Log.d("TASKS",tasks::class.simpleName.toString())
 
         // Realmが起動、または更新（追加、変更、削除）時にreloadListViewを実行する
         CoroutineScope(Dispatchers.Default).launch {
@@ -170,7 +168,6 @@ class MainActivity : AppCompatActivity() {
             // 入力テキストに変更があったとき
             override fun onQueryTextChange(newText: String): Boolean {
                 // text changed
-                Log.d("SEARCH",newText)
                 return true
             }
 
@@ -200,7 +197,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun searchTasks(query:String, tasks:List<Task>){
         var check = 0
-        Log.d("TEST",check.toString())
         for (i in tasks.indices) {
             if (tasks[i].category.contains(query)) {
                 task = listOf(tasks[i])
@@ -213,7 +209,6 @@ class MainActivity : AppCompatActivity() {
         Log.d("TEST",check.toString())
         if(check >= tasks.size){
             taskAdapter.updateTaskList(task)
-            Log.d("TEST","ここ通ってる？")
         }
 
     }
