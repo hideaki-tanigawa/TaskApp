@@ -4,9 +4,18 @@
 
     <string name="input_title_hint">タイトル</string>
     <string name="input_content_hint">内容</string>
-    <string name="input_category_hint">カテゴリ</string>
+    <string name="input_category_hint">カテゴリ名</string>
     <string name="button_date_text">----/--/--</string>
     <string name="button_time_text">--:--</string>
     <string name="button_done_text">決定</string>
     <string name="listActionBarSearch">検索</string>
+    <string name="category_add">追加</string>
+    <string name="category_register">登録</string>
+    <string-array name="planets_array">
+        <item>ひとし</item>
+        <item>まさし</item>
+        <item>たけし</item>
+        <item>さとし</item>
+        <item>けんじ</item>
+    </string-array>
 </resources>

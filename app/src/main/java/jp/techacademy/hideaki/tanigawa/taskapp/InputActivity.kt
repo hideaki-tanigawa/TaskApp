@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.ext.query
@@ -25,6 +27,7 @@ class InputActivity : AppCompatActivity() {
     private lateinit var realm: Realm
     private lateinit var task: Task
     private var calendar = Calendar.getInstance()
+    private val spineerItems = arrayOf("ウッディ","バズ","ポテトヘッド","スリンキー","レックス")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +44,23 @@ class InputActivity : AppCompatActivity() {
         binding.content.dateButton.setOnClickListener(dateClickListener)
         binding.content.timeButton.setOnClickListener(timeClickListener)
         binding.content.doneButton.setOnClickListener(doneClickListener)
+        binding.content.categoryAddButton.setOnClickListener(addClickListener)
+
+        // スピナーの取得
+        val spinner = findViewById<Spinner>(R.id.category_edit_text)
+
+        // アダプタ作成
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            spineerItems,
+        )
+
+        // 選択肢の各項目のレイアウト
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        // AdapterをSpinnerのAdapterとして設定
+        spinner.adapter = adapter
 
         // EXTRA_TASKからTaskのidを取得
         val intent = intent
@@ -104,6 +124,14 @@ class InputActivity : AppCompatActivity() {
     }
 
     /**
+     * カテゴリ追加ボタン
+     */
+    private val addClickListener = View.OnClickListener {
+        val intent = Intent(this, CategoryInput::class.java)
+        startActivity(intent)
+    }
+
+    /**
      * タスクを取得または初期化
      */
     private fun initTask(taskId: Int) {
@@ -129,7 +157,7 @@ class InputActivity : AppCompatActivity() {
             // taskの値を画面項目に反映
             binding.content.titleEditText.setText(task.title)
             binding.content.contentEditText.setText(task.contents)
-            binding.content.categoryEditText.setText(task.category)
+//            binding.content.categoryEditText.setText(task.category)
         }
 
         // 日付と時刻のボタンの表示を設定
@@ -146,7 +174,7 @@ class InputActivity : AppCompatActivity() {
         // 登録（更新）する値を取得
         val title = binding.content.titleEditText.text.toString()
         val content = binding.content.contentEditText.text.toString()
-        val category = binding.content.categoryEditText.text.toString()
+//        val category = binding.content.categoryEditText.text.toString()
         val date = simpleDateFormat.format(calendar.time)
 
         if (task.id == -1) {
@@ -157,7 +185,7 @@ class InputActivity : AppCompatActivity() {
             // 画面項目の値で更新
             task.title = title
             task.contents = content
-            task.category = category
+//            task.category = category
             task.date = date
 
             // 登録処理
