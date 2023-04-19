@@ -9,11 +9,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewParent
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.ext.query
+import io.realm.kotlin.query.Sort
 import jp.techacademy.hideaki.tanigawa.taskapp.databinding.ActivityInputBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +28,12 @@ class InputActivity : AppCompatActivity() {
     private lateinit var binding: ActivityInputBinding
 
     private lateinit var realm: Realm
+    private lateinit var realm2: Realm
     private lateinit var task: Task
     private var calendar = Calendar.getInstance()
-    private val spineerItems = arrayOf("ウッディ","バズ","ポテトヘッド","スリンキー","レックス")
+    private var categoryId:Int = 0
+    private lateinit var category: Category
+    private var categoryNo = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,32 +52,40 @@ class InputActivity : AppCompatActivity() {
         binding.content.doneButton.setOnClickListener(doneClickListener)
         binding.content.categoryAddButton.setOnClickListener(addClickListener)
 
-        // スピナーの取得
-        val spinner = findViewById<Spinner>(R.id.category_edit_text)
-
-        // アダプタ作成
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            spineerItems,
-        )
-
-        // 選択肢の各項目のレイアウト
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-
-        // AdapterをSpinnerのAdapterとして設定
-        spinner.adapter = adapter
-
         // EXTRA_TASKからTaskのidを取得
         val intent = intent
         val taskId = intent.getIntExtra(EXTRA_TASK, -1)
 
-        // Realmデータベースとの接続を開く
+        // TaskのRealmデータベースとの接続を開く
         val config = RealmConfiguration.create(schema = setOf(Task::class))
         realm = Realm.open(config)
 
+        val config2 = RealmConfiguration.create(schema = setOf(Category::class))
+        realm2 = Realm.open(config2)
+
         // タスクを取得または初期化
         initTask(taskId)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // スピナーの取得
+        val spinner = findViewById<Spinner>(R.id.category_edit_text)
+
+        setSpinner(spinner)
+
+        // 選択されたアイテムの変更を検知する
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+                val id = parent?.selectedItemId
+                categoryId = id!!.toInt()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d("SpinnerResult","何も選択されませんでした")
+            }
+        }
+        spinner.setSelection(categoryNo)
     }
 
     override fun onDestroy() {
@@ -97,6 +111,8 @@ class InputActivity : AppCompatActivity() {
         )
         datePickerDialog.show()
     }
+
+
 
     /**
      * 時刻選択ボタン
@@ -135,6 +151,8 @@ class InputActivity : AppCompatActivity() {
      * タスクを取得または初期化
      */
     private fun initTask(taskId: Int) {
+        // スピナーの取得
+        val spinner = findViewById<Spinner>(R.id.category_edit_text)
         // 引数のtaskIdに合致するタスクを検索
         val findTask = realm.query<Task>("id==$taskId").first().find()
 
@@ -157,7 +175,7 @@ class InputActivity : AppCompatActivity() {
             // taskの値を画面項目に反映
             binding.content.titleEditText.setText(task.title)
             binding.content.contentEditText.setText(task.contents)
-//            binding.content.categoryEditText.setText(task.category)
+            categoryNo = task.category
         }
 
         // 日付と時刻のボタンの表示を設定
@@ -174,7 +192,6 @@ class InputActivity : AppCompatActivity() {
         // 登録（更新）する値を取得
         val title = binding.content.titleEditText.text.toString()
         val content = binding.content.contentEditText.text.toString()
-//        val category = binding.content.categoryEditText.text.toString()
         val date = simpleDateFormat.format(calendar.time)
 
         if (task.id == -1) {
@@ -185,7 +202,7 @@ class InputActivity : AppCompatActivity() {
             // 画面項目の値で更新
             task.title = title
             task.contents = content
-//            task.category = category
+            task.category = categoryId
             task.date = date
 
             // 登録処理
@@ -199,7 +216,7 @@ class InputActivity : AppCompatActivity() {
                     // 画面項目の値で更新
                     this.title = title
                     this.contents = content
-                    this.category = category
+                    this.category = categoryId
                     this.date = date
                 }
             }
@@ -229,5 +246,29 @@ class InputActivity : AppCompatActivity() {
         val timeFormat = SimpleDateFormat("HH:mm", Locale.JAPANESE)
         binding.content.timeButton.text = timeFormat.format(calendar.time)
 
+    }
+
+    /**
+     * Spinnerの設定
+     */
+    private fun setSpinner(spinner: Spinner){
+        val categoryList = realm2.query<Category>().find()
+        val list = mutableListOf<String>()
+        for (i in categoryList.indices){
+            list.add(categoryList[i].category_name)
+        }
+
+        // アダプタ作成
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            list,
+        )
+
+        // AdapterをSpinnerのAdapterとして設定
+        spinner.adapter = adapter
+
+        // 選択肢の各項目のレイアウト
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     }
 }

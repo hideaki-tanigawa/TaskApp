@@ -9,14 +9,19 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.SearchView
+import android.widget.Spinner
 import androidx.core.app.NotificationManagerCompat
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.ext.query
+import io.realm.kotlin.internal.realmValueToDecimal128
 import io.realm.kotlin.notifications.InitialResults
 import io.realm.kotlin.notifications.UpdatedResults
 import io.realm.kotlin.query.Sort
@@ -30,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var taskAdapter: TaskAdapter
     private lateinit var realm: Realm
+    private lateinit var realm2: Realm
     private lateinit var searchBar: SearchView
     private lateinit var task: List<Task>
 
@@ -146,6 +152,10 @@ class MainActivity : AppCompatActivity() {
         val config = RealmConfiguration.create(schema = setOf(Task::class))
         realm = Realm.open(config)
 
+        //categoryのRealmデータベースとの接続を開く
+        val config2 = RealmConfiguration.create(schema = setOf(Category::class))
+        realm2 = Realm.open(config2)
+
         // Realmからタスクの一覧を取得
         val tasks = realm.query<Task>().sort("date", Sort.DESCENDING).find()
 
@@ -162,21 +172,38 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        searchBar = findViewById(R.id.searchView)
+        // スピナーの取得
+        val spinner = findViewById<Spinner>(R.id.category_edit_text)
 
-        searchBar.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            // 入力テキストに変更があったとき
-            override fun onQueryTextChange(newText: String): Boolean {
-                // text changed
-                return true
+        val categoryList = realm2.query<Category>().find()
+        val list = mutableListOf<String>()
+        for (i in categoryList.indices){
+            list.add(categoryList[i].category_name)
+        }
+
+        // アダプタ作成
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            list,
+        )
+
+        // AdapterをSpinnerのAdapterとして設定
+        spinner.adapter = adapter
+
+        // 選択肢の各項目のレイアウト
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        // 選択されたアイテムの変更を検知する
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+                val query = parent?.selectedItemId
+                searchTasks(query!!.toInt(),tasks)
             }
 
-            // 検索ボタンを押したとき
-            override fun onQueryTextSubmit(query: String): Boolean {
-                searchTasks(query,tasks)
-                return true
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d("SpinnerResult","何も選択されませんでした")
             }
-        })
+        }
     }
 
     override fun onDestroy() {
@@ -195,10 +222,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun searchTasks(query:String, tasks:List<Task>){
+    private fun searchTasks(query:Int, tasks:List<Task>){
         var check = 0
         for (i in tasks.indices) {
-            if (tasks[i].category.contains(query)) {
+            if (tasks[i].category == query) {
                 task = listOf(tasks[i])
                 taskAdapter.updateTaskList(task)
             }else{
@@ -210,6 +237,5 @@ class MainActivity : AppCompatActivity() {
         if(check >= tasks.size){
             taskAdapter.updateTaskList(task)
         }
-
     }
 }
