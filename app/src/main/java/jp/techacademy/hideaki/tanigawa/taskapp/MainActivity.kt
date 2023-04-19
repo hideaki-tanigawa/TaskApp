@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var taskAdapter: TaskAdapter
     private lateinit var realm: Realm
     private lateinit var realm2: Realm
-    private lateinit var searchBar: SearchView
+    private var count = 0
     private lateinit var task: List<Task>
 
     private val requestPermissonLauncher =
@@ -197,7 +197,10 @@ class MainActivity : AppCompatActivity() {
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
                 val query = parent?.selectedItemId
-                searchTasks(query!!.toInt(),tasks)
+                if(count != 0){
+                    searchTasks(query!!.toInt(),tasks)
+                }
+                count = 1
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -233,7 +236,6 @@ class MainActivity : AppCompatActivity() {
                 check++
             }
         }
-        Log.d("TEST",check.toString())
         if(check >= tasks.size){
             taskAdapter.updateTaskList(task)
         }

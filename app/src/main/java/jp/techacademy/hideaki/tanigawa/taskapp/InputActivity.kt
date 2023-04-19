@@ -32,7 +32,6 @@ class InputActivity : AppCompatActivity() {
     private lateinit var task: Task
     private var calendar = Calendar.getInstance()
     private var categoryId:Int = 0
-    private lateinit var category: Category
     private var categoryNo = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
