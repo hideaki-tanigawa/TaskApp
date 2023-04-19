@@ -135,7 +135,6 @@ class MainActivity : AppCompatActivity() {
                     resultIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-
                 val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
                 alarmManager.cancel(resultPendingIntent)
             }
@@ -175,6 +174,25 @@ class MainActivity : AppCompatActivity() {
         // スピナーの取得
         val spinner = findViewById<Spinner>(R.id.category_edit_text)
 
+        // 選択されたアイテムの変更を検知する
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+                val query = parent?.selectedItemId
+                searchTasks(query!!.toInt(),tasks)
+                count = 1
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d("SpinnerResult","何も選択されませんでした")
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // スピナーの取得
+        val spinner = findViewById<Spinner>(R.id.category_edit_text)
+
         val categoryList = realm2.query<Category>().find()
         val list = mutableListOf<String>()
         for (i in categoryList.indices){
@@ -193,20 +211,6 @@ class MainActivity : AppCompatActivity() {
 
         // 選択肢の各項目のレイアウト
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        // 選択されたアイテムの変更を検知する
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
-                val query = parent?.selectedItemId
-                if(count != 0){
-                    searchTasks(query!!.toInt(),tasks)
-                }
-                count = 1
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                Log.d("SpinnerResult","何も選択されませんでした")
-            }
-        }
     }
 
     override fun onDestroy() {
@@ -227,16 +231,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun searchTasks(query:Int, tasks:List<Task>){
         var check = 0
+        var count2 = 0
         for (i in tasks.indices) {
+            Log.d("CATEGORY",tasks[i].title)
+            Log.d("CATEGORY",tasks[i].category.toString())
             if (tasks[i].category == query) {
-                task = listOf(tasks[i])
-                taskAdapter.updateTaskList(task)
+                if(count2 >= 1){
+                    task = task.plus(listOf(tasks[i]))
+                }else{
+                    task = listOf(tasks[i])
+                }
+                count2++
             }else{
-                task = emptyList()
                 check++
             }
         }
+
+        Log.d("CATEGORY",task.size.toString())
+
+        Log.d("TEST",check.toString())
         if(check >= tasks.size){
+            task = emptyList()
+            taskAdapter.updateTaskList(task)
+        }else{
             taskAdapter.updateTaskList(task)
         }
     }
