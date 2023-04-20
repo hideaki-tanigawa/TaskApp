@@ -215,6 +215,7 @@ class MainActivity : AppCompatActivity() {
 
         // Realmデータベースとの接続を閉じる
         realm.close()
+        realm2.close()
     }
 
     /**
