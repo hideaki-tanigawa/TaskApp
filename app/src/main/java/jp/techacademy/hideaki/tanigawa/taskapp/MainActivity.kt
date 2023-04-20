@@ -154,7 +154,10 @@ class MainActivity : AppCompatActivity() {
         //categoryのRealmデータベースとの接続を開く
         val config2 = RealmConfiguration.create(schema = setOf(Category::class))
         realm2 = Realm.open(config2)
+    }
 
+    override fun onResume() {
+        super.onResume()
         // Realmからタスクの一覧を取得
         val tasks = realm.query<Task>().sort("date", Sort.DESCENDING).find()
 
@@ -171,25 +174,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // スピナーの取得
-        val spinner = findViewById<Spinner>(R.id.category_edit_text)
-
-        // 選択されたアイテムの変更を検知する
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
-                val query = parent?.selectedItemId
-                searchTasks(query!!.toInt(),tasks)
-                count = 1
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                Log.d("SpinnerResult","何も選択されませんでした")
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
         // スピナーの取得
         val spinner = findViewById<Spinner>(R.id.category_edit_text)
 
@@ -211,6 +195,19 @@ class MainActivity : AppCompatActivity() {
 
         // 選択肢の各項目のレイアウト
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        // 選択されたアイテムの変更を検知する
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+                val query = parent?.selectedItemId
+                searchTasks(query!!.toInt(),tasks)
+                count = 1
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d("SpinnerResult","何も選択されませんでした")
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -247,9 +244,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Log.d("CATEGORY",task.size.toString())
-
-        Log.d("TEST",check.toString())
         if(check >= tasks.size){
             task = emptyList()
             taskAdapter.updateTaskList(task)
